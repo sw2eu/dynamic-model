@@ -9,6 +9,7 @@ use Nextras\Orm\Entity\Reflection\MetadataParserFactory;
 use Nextras\Orm\Model\Model;
 use Nextras\Orm\Repository\Repository;
 use Sw2\DynamicModel\DynamicModel;
+use Tracy\Debugger;
 
 /**
  * Class DynamicOrmExtension
@@ -59,18 +60,20 @@ class DynamicOrmExtension extends OrmExtension
 			$repositories[$name] = $repositoryClass;
 
 			$mapperClass = Strings::replace($repositoryClass, '~Repository$~', 'Mapper');
-			if (class_exists($mapperClass)) {
-				$mapperName = $builder->getByType($mapperClass);
-				if ($mapperName === NULL) {
-					$mapperName = Strings::replace($repositoryName, '~Repository$~', 'Mapper');
-					$builder->addDefinition($mapperName)
-						->setClass($mapperClass)
-						->setArguments(['cache' => '@' . $this->prefix('cache')]);
-				}
-
-				$definition->setArguments(['mapper' => '@' . $mapperName]);
+			$mapperName = $builder->getByType($mapperClass);
+			if ($mapperName === NULL) {
+				$mapperName = Strings::replace($repositoryName, '~Repository$~', 'Mapper');
+				$builder->addDefinition($mapperName)
+					->setClass($mapperClass)
+					->setArguments(['cache' => '@' . $this->prefix('cache')]);
+			} else {
+				$builder->getDefinition($mapperName)
+					->setArguments(['cache' => '@' . $this->prefix('cache')]);
 			}
-			$definition->setArguments(['dependencyProvider' => '@' . $this->prefix('dependencyProvider')]);
+			$definition->setArguments([
+				'mapper' => '@' . $mapperName,
+				'dependencyProvider' => '@' . $this->prefix('dependencyProvider')
+			]);
 			$definition->addSetup('setModel', ['@' . $this->prefix('model')]);
 		}
 		return $repositories;
