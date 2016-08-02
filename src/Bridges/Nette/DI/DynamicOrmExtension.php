@@ -5,6 +5,7 @@ namespace Sw2\DynamicModel\Bridges\Nette\DI;
 use Nette\Reflection\ClassType;
 use Nette\Utils\Strings;
 use Nextras\Orm\Bridges\NetteDI\OrmExtension;
+use Nextras\Orm\Bridges\NetteDI\RepositoryLoader;
 use Nextras\Orm\Entity\Reflection\MetadataParserFactory;
 use Nextras\Orm\Model\Model;
 use Nextras\Orm\Repository\Repository;
@@ -77,6 +78,25 @@ class DynamicOrmExtension extends OrmExtension
 			$definition->addSetup('setModel', ['@' . $this->prefix('model')]);
 		}
 		return $repositories;
+	}
+
+	/**
+	 * @param array $repositories
+	 */
+	protected function setupRepositoryLoader(array $repositories)
+	{
+		$builder = $this->getContainerBuilder();
+		$map = [];
+		foreach ($repositories as $name => $className) {
+			$map[$className] = $builder->getByType($className);
+		}
+
+		$builder = $this->getContainerBuilder();
+		$builder->addDefinition($this->prefix('repositoryLoader'))
+			->setClass(RepositoryLoader::class)
+			->setArguments([
+				'repositoryNamesMap' => $map,
+			]);
 	}
 
 	/**
