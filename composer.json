@@ -8,7 +8,7 @@
 		}
 	],
 	"require": {
-		"nette/di": "^2.4",
+		"nette/di": "~2.3",
 		"nette/utils": "~2.3",
 		"nextras/orm": "~2.0"
 	},
