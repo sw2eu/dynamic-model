@@ -68,12 +68,10 @@ class DynamicOrmExtension extends OrmExtension
 						->setArguments(['cache' => '@' . $this->prefix('cache')]);
 				}
 
-				$definition->setArguments([
-					'@' . $mapperName,
-					'@' . $this->prefix('dependencyProvider'),
-				]);
-				$definition->addSetup('setModel', ['@' . $this->prefix('model')]);
+				$definition->setArguments(['mapper' => '@' . $mapperName]);
 			}
+			$definition->setArguments(['dependencyProvider' => '@' . $this->prefix('dependencyProvider')]);
+			$definition->addSetup('setModel', ['@' . $this->prefix('model')]);
 		}
 		return $repositories;
 	}
