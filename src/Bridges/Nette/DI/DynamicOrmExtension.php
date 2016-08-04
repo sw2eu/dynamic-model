@@ -2,15 +2,16 @@
 
 namespace Sw2\DynamicModel\Bridges\Nette\DI;
 
+use Nette\DI\Compiler;
 use Nette\Reflection\ClassType;
 use Nette\Utils\Strings;
 use Nextras\Orm\Bridges\NetteDI\OrmExtension;
 use Nextras\Orm\Bridges\NetteDI\RepositoryLoader;
-use Nextras\Orm\Entity\Reflection\MetadataParserFactory;
+use Nextras\Orm\Model\MetadataStorage;
 use Nextras\Orm\Model\Model;
 use Nextras\Orm\Repository\Repository;
-use Sw2\DynamicModel\DynamicModel;
-use Tracy\Debugger;
+use Sw2\DynamicModel\Entity\Reflection\DynamicMetadataParserFactory;
+use Sw2\DynamicModel\Model\DynamicModel;
 
 /**
  * Class DynamicOrmExtension
@@ -20,7 +21,7 @@ class DynamicOrmExtension extends OrmExtension
 {
 	/** @var array */
 	public $defaults = [
-		'metadataParserFactory' => MetadataParserFactory::class
+		'metadataParserFactory' => DynamicMetadataParserFactory::class
 	];
 
 	public function loadConfiguration()
@@ -81,6 +82,18 @@ class DynamicOrmExtension extends OrmExtension
 	}
 
 	/**
+	 * @param string|array $config
+	 */
+	protected function setupMetadataParserFactory($config)
+	{
+		$builder = $this->getContainerBuilder();
+		if (is_array($config) && empty($config['class'])) {
+			$config['class'] = $this->defaults['metadataParserFactory'];
+		}
+		Compiler::parseService($builder->addDefinition($this->prefix('metadataParserFactory')), $config);
+	}
+
+	/**
 	 * @param array $repositories
 	 */
 	protected function setupRepositoryLoader(array $repositories)
@@ -98,6 +111,20 @@ class DynamicOrmExtension extends OrmExtension
 				'repositoryNamesMap' => $map,
 			]);
 	}
+
+	protected function setupMetadataStorage(array $repositoryConfig)
+	{
+		$builder = $this->getContainerBuilder();
+		$builder->addDefinition($this->prefix('metadataStorage'))
+			->setClass(MetadataStorage::class)
+			->setArguments([
+				'entityClassesMap' => $repositoryConfig[2],
+				'cache' => '@' . $this->prefix('cache'),
+				'metadataParserFactory' => '@' . $this->prefix('metadataParserFactory'),
+				'repositoryLoader' => '@' . $this->prefix('repositoryLoader'),
+			]);
+	}
+
 
 	/**
 	 * @param string $repositoryClass

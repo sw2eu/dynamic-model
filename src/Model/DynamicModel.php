@@ -1,6 +1,6 @@
 <?php
 
-namespace Sw2\DynamicModel;
+namespace Sw2\DynamicModel\Model;
 
 use Nextras\Orm\Model\Model;
 
